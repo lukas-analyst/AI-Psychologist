@@ -6,9 +6,10 @@ const QUESTIONNAIRES = [
     formUrl: "https://docs.google.com/forms/d/14iyP_kuezARsgw2GHcJGqj3HSuKPZnVSQTjsdO7ia9Y"
   },
   {
-    id: "dotaznik2",
+    id: "cdi",
     name: "CDI",
-    sheetId: "https://docs.google.com/forms/d/1Rv0Giu5eJcC3R-pM_zW6iwpwjK58dFxD_-OLoZFIhGw"
+    sheetId: "13zRZNQuQhYkpgorL05scqi8ovuO_OzF9YSqfrc63FwI",
+    ormUrl: "https://docs.google.com/forms/d/1Rv0Giu5eJcC3R-pM_zW6iwpwjK58dFxD_-OLoZFIhGw"
   }
 ];
 

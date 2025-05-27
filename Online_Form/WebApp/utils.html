@@ -12,11 +12,13 @@
         let color = "black";
         if (isNaN(num)) return `<span>${value}</span>`;
         if (!reverse) {
-            if (num >= redLimit) color = "red";
-            else if (num >= greenLimit) color = "green";
+            if (num < greenLimit) color = "green";
+            else if (num >= redLimit) color = "red";
+            else color = "black";
         } else {
-            if (num <= redLimit) color = "red";
+            if (num > redLimit) color = "red";
             else if (num <= greenLimit) color = "green";
+            else color = "black";
         }
         return `<span style="color:${color}">${value}</span>`;
     }

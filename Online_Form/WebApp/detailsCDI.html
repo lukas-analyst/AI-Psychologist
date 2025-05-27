@@ -1,0 +1,125 @@
+<script>
+    window.detailscdi = function () {
+        const respondentId = state.respondent.ID;
+        console.log("detailsconners3: respondentId =", respondentId);
+        Promise.all([
+            new Promise(resolve => {
+                google.script.run
+                    .withSuccessHandler(data => resolve(data))
+                    .withFailureHandler(e => resolve({ error: e && e.message ? e.message : e }))
+                    .getResultsData(state.questionnaire.sheetId, respondentId);
+            }),
+            new Promise(resolve => {
+                google.script.run
+                    .withSuccessHandler(data => resolve(data))
+                    .withFailureHandler(e => resolve({ error: e && e.message ? e.message : e }))
+                    .getProfileData(state.questionnaire.sheetId, respondentId);
+            })
+        ]).then(([resultsData, profileData]) => {
+            // --- 1. Definice TABLES (číslované, s atributy) ---
+            const TABLES = [
+                { id: 1, order: 1, toggleSection: false, name: "Profil (T-skóry)" },
+                { id: 2, order: 2, toggleSection: true, name: "Výsledky kategorií" }
+            ];
+
+            // --- 2. LABELS s číslem tabulky jako první parametr ---
+            const LABELS = {
+                // Profil (T-skóry)
+                CAT_F_T: { table: 1, label: "Celkový skór CDI", color: [60, 70] },
+                CAT_A_T: { table: 1, label: "Špatná nálada", color: [60, 70] },
+                CAT_B_T: { table: 1, label: "Interpersonální potíže", color: [60, 70] },
+                CAT_C_T: { table: 1, label: "Nevýkonnost", color: [60, 70] },
+                CAT_D_T: { table: 1, label: "Anhedonie", color: [60, 70] },
+                CAT_E_T: { table: 1, label: "Negativní sebehodnocení", color: [60, 70] },
+                // Výsledky kategorií
+                CAT_F: { table: 2, label: "Celkový skór"},
+                CAT_A: { table: 2, label: "Špatná nálada - počet bodů" },
+                CAT_B: { table: 2, label: "Interpersonální potíže - počet bodů" },
+                CAT_C: { table: 2, label: "Nevýkonnost - počet bodů" },
+                CAT_D: { table: 2, label: "Anhedonie - počet bodů" },
+                CAT_E: { table: 2, label: "Negativní sebehodnocení - počet bodů" }
+            };
+
+            // --- Sjednocené vykreslení sekcí ---
+            function renderSections(row, header, labelMap, tables) {
+                if (!row || !header) return "";
+                const sections = {};
+                for (let i = 0; i < header.length; i++) {
+                    const key = header[i];
+                    const labelObj = labelMap[key];
+                    if (!labelObj) continue;
+                    const tbl = labelObj.table || 99;
+                    if (!sections[tbl]) sections[tbl] = [];
+                    sections[tbl].push(
+                        `<tr>
+                            <td>${labelObj.label}</td>
+                            <td>${getColoredValue(row[i], labelObj)}</td>
+                        </tr>`
+                    );
+                }
+                let html = "";
+                tables.sort((a, b) => a.order - b.order).forEach(table => {
+                    if (!sections[table.id]) return;
+                    // Ikona pro kopírování obsahu tabulky
+                    const copyIcon = `<span class="material-symbols-outlined copy-table-btn"
+                        title="Kopírovat tabulku"
+                        style="font-size:1.1em;vertical-align:middle;cursor:pointer;float:right;margin-left:0.5em;"
+                        onclick="event.stopPropagation(); copyTable('table-content-${table.id}')"
+                    >content_copy</span>`;
+
+                    if (table.toggleSection) {
+                        const tableId = `toggle-table-${table.id}`;
+                        html += `<div class="results-table-wrapper toggle-section fade-in" tabindex="0" onclick="
+                            var tbl = document.getElementById('${tableId}');
+                            var expanded = tbl.style.display !== 'none';
+                            tbl.style.display = expanded ? 'none' : '';
+                            this.classList.toggle('expanded', !expanded);
+                        ">
+                            <h3>${table.name}${copyIcon}</h3>
+                            <div id="${tableId}" style="display:none;">
+                                <table id="table-content-${table.id}" class="respondent-table results-table"><tbody>${sections[table.id].join("")}</tbody></table>
+                            </div>
+                        </div>`;
+                    } else {
+                        html += `<div class="results-table-wrapper fade-in">
+                            <h3>${table.name}${copyIcon}</h3>
+                            <table id="table-content-${table.id}" class="respondent-table results-table"><tbody>${sections[table.id].join("")}</tbody></table>
+                        </div>`;
+                    }
+                });
+                return html;
+            }
+
+            // --- VYKRESLENÍ ---
+            let html = "";
+
+            // PROFIL
+            html += (profileData && profileData.row && profileData.header)
+                ? renderSections(profileData.row, profileData.header, LABELS, TABLES, true)
+                : `<div class="results-table-wrapper"><p style="color:#d32f2f;">Profil nenalezen.</p></div>`;
+
+            // VÝSLEDKY
+            html += (resultsData && resultsData.row && resultsData.header)
+                ? renderSections(resultsData.row, resultsData.header, LABELS, TABLES, false)
+                : `<div class="results-table-wrapper"><p style="color:#d32f2f;">Výsledky nenalezeny.</p></div>`;
+
+            document.getElementById('results-profile-loading').outerHTML = html;
+
+            if (!document.getElementById('export-all-csv-btn')) {
+                const btn = document.createElement('button');
+                btn.id = 'export-all-csv-btn';
+                btn.className = 'export-all-csv-btn';
+                btn.title = 'Exportovat všechna data do CSV';
+                btn.setAttribute('aria-label', 'Exportovat všechna data do CSV');
+                btn.onmouseover = () => btn.style.background = "#bbdefb";
+                btn.onmouseout = () => btn.style.background = "#e3f0fc";
+                btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.3em;">csv</span>`;
+                btn.onclick = function () {
+                    exportAllRespondentDataToCSV(profileData, resultsData);
+                };
+                const header = document.querySelector('.header');
+                if (header) header.appendChild(btn);
+            }
+        });
+    }
+</script>
