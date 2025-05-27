@@ -32,7 +32,7 @@ function createRespondentId(timestamp, gender) {
 }
 
 function getRespondentsData() {
-  var ss = SpreadsheetApp.openById("1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('Respondents');
   var data = sheet.getDataRange().getValues();
   var textData = data.map(row => row.map(cell =>
@@ -44,7 +44,7 @@ function getRespondentsData() {
   return textData;
 }
 function getResultsData() {
-  var ss = SpreadsheetApp.openById("1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('Results');
   var data = sheet.getDataRange().getValues();
   var textData = data.map(row => row.map(cell =>
@@ -56,7 +56,7 @@ function getResultsData() {
   return textData;
 }
 function getPointsData() {
-  var ss = SpreadsheetApp.openById("1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('Points');
   var data = sheet.getDataRange().getValues();
   var textData = data.map(row => row.map(cell =>
@@ -68,7 +68,7 @@ function getPointsData() {
   return textData;
 }
 function getProfileData() {
-  var ss = SpreadsheetApp.openById("1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('Profile');
   var data = sheet.getDataRange().getValues();
   var textData = data.map(row => row.map(cell =>

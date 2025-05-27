@@ -4,6 +4,8 @@
  * - Obsahuje funkce pro získání dat a automatické zpracování po odeslání formuláře.
  */
 
+var SPREADSHEET_ID = "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus";
+
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Conners 3')
@@ -23,7 +25,7 @@ function doGet(e) {
   if (allowedSheets.indexOf(sheetName) === -1) {
     return ContentService.createTextOutput(JSON.stringify({error: "Sheet not allowed"})).setMimeType(ContentService.MimeType.JSON);
   }
-  var ss = SpreadsheetApp.openById("1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     return ContentService.createTextOutput(JSON.stringify({error: "Sheet not found"})).setMimeType(ContentService.MimeType.JSON);

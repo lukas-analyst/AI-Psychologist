@@ -2,11 +2,12 @@ const QUESTIONNAIRES = [
   {
     id: "conners3",
     name: "Conners 3",
-    sheetId: "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus"
+    sheetId: "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus",
+    formUrl: "https://docs.google.com/forms/d/14iyP_kuezARsgw2GHcJGqj3HSuKPZnVSQTjsdO7ia9Y"
   },
   {
     id: "dotaznik2",
-    name: "Dotazník 2",
+    name: "CDI",
     sheetId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   }
 ];
@@ -15,7 +16,7 @@ function doGet() {
   var user_email = Session.getActiveUser().getEmail();
 
   var template = HtmlService.createTemplateFromFile('index')
-      template.user_email = user_email;
+  template.user_email = user_email;
   return template.evaluate();
 }
 
@@ -51,23 +52,23 @@ function getRespondents(sheetId) {
 }
 
 function getResultsData(sheetId, respondentId) {
-  var ss = SpreadsheetApp.openById(sheetId || "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(sheetId);
   var sheet = ss.getSheetByName('Results');
   if (!sheet) return {};
   var data = sheet.getDataRange().getValues();
   if (!respondentId) return data;
   var header = data[0];
   var row = data.find((r, i) => i > 0 && String(r[0]) === String(respondentId));
-  return row ? {header: header, row: row} : {};
+  return row ? { header: header, row: row } : {};
 }
 
 function getProfileData(sheetId, respondentId) {
-  var ss = SpreadsheetApp.openById(sheetId || "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var ss = SpreadsheetApp.openById(sheetId);
   var sheet = ss.getSheetByName('Profile');
   if (!sheet) return {};
   var data = sheet.getDataRange().getValues();
   if (!respondentId) return data;
   var header = data[0];
   var row = data.find((r, i) => i > 0 && String(r[0]) === String(respondentId));
-  return row ? {header: header, row: row} : {};
+  return row ? { header: header, row: row } : {};
 }
