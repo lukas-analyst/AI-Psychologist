@@ -8,7 +8,7 @@ const QUESTIONNAIRES = [
   {
     id: "dotaznik2",
     name: "CDI",
-    sheetId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    sheetId: "https://docs.google.com/forms/d/1Rv0Giu5eJcC3R-pM_zW6iwpwjK58dFxD_-OLoZFIhGw"
   }
 ];
 
