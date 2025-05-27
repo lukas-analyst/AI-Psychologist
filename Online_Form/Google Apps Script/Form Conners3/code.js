@@ -39,20 +39,16 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify(textData)).setMimeType(ContentService.MimeType.JSON);
 }
 
-// Trigger: po odeslání formuláře zpracuje odpovědi a uloží výsledky
 function onFormSubmit(e) {
   countPoints();
+  processResults(config);
   exportRespondents();
   exportProfile();
-  main();
 }
 
-// Hlavní zpracování výsledků (volá processResults s configem)
 function main() {
+  countPoints();
   processResults(config);
-}
-
-// Funkce pro menu - volá processResults s configem
-function processResultsMenu() {
-  processResults(config);
+  exportRespondents();
+  exportProfile();
 }
