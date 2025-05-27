@@ -1,42 +1,25 @@
-# AI Psychologist Project
+# AI Psychologist
 
-## Overview
-This project implements an AI psychologist that interacts with users and processes data. It utilizes a local AI model to provide responses and insights.
+Tento repozitář obsahuje nástroje pro automatizované zpracování psychologických dotazníků (např. CDI, Conners 3) v prostředí Google Apps Script a Python.
 
-## Project Structure
-```
-ai-psychologist
-├── src
-│   ├── talk_ai.py        # Contains the core structure for the AI psychologist.
-│   └── run_model.py      # Script to run the AI model using the command `ollama run gemma3:12b`.
-├── requirements.txt      # Lists the dependencies required for the project.
-└── README.md             # Documentation for the project.
-```
+## Struktura projektu
 
-## Installation
-To set up the project, follow these steps:
+- **Online_Form/** – Webová aplikace a Google Apps Script pro správu a vyhodnocení dotazníků.
+- **Parse data/** – Python skripty pro převod tabulek a generování T-skórů z textových souborů.
+- **requirements.txt** – (volitelné) požadavky pro Python skripty.
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd ai-psychologist
-   ```
+---
 
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
+## Podsložky
 
-## Usage
-To run the AI model, execute the following command in the terminal:
-```
-python src/run_model.py
-```
+### [Online_Form/](Online_Form/README.md)
+Webová aplikace a Google Apps Script pro správu dotazníků, respondentů a výsledků.
 
-This will start the AI model and allow for interaction.
+### [Parse data/](Parse%20data/README.md)
+Python skripty pro převod a přípravu dat (T-skóry, CSV tabulky).
 
-## Contributing
-Contributions are welcome! Please submit a pull request or open an issue for any suggestions or improvements.
+---
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## Licence
+
+Projekt je určen pro interní použití.
