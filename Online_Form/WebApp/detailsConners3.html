@@ -1,0 +1,245 @@
+<script>
+    window.detailsconners3 = function () {
+        const respondentId = state.respondent.ID;
+        console.log("detailsconners3: respondentId =", respondentId);
+        Promise.all([
+            new Promise(resolve => {
+                google.script.run
+                    .withSuccessHandler(data => resolve(data))
+                    .withFailureHandler(e => resolve({ error: e && e.message ? e.message : e }))
+                    .getResultsData(state.questionnaire.sheetId, respondentId);
+            }),
+            new Promise(resolve => {
+                google.script.run
+                    .withSuccessHandler(data => resolve(data))
+                    .withFailureHandler(e => resolve({ error: e && e.message ? e.message : e }))
+                    .getProfileData(state.questionnaire.sheetId, respondentId);
+            })
+        ]).then(([resultsData, profileData]) => {
+            // --- 1. Definice TABLES (číslované, s atributy) ---
+            const TABLES = [
+                { id: 1, order: 1, toggleSection: false, name: "Profil (T-skóry)" },
+                { id: 2, order: 2, toggleSection: true, name: "Výsledky kategorií" },
+                { id: 3, order: 3, toggleSection: false, name: "Screening skóre – Úzkost" },
+                { id: 4, order: 4, toggleSection: false, name: "Screening skóre – Deprese" },
+                { id: 5, order: 5, toggleSection: false, name: "Kritické položky závažného chování" },
+                { id: 6, order: 6, toggleSection: false, name: "Kritéria DSM-5" },
+                { id: 7, order: 9, toggleSection: false, name: "ADHD Index" },
+                { id: 8, order: 10, toggleSection: true, name: "ADHD s převahou nepozornosti - detail" },
+                { id: 9, order: 11, toggleSection: true, name: "ADHD s převahou hyperaktivity/impulzivity - detail" },
+                { id: 10, order: 12, toggleSection: true, name: "Porucha chování - detail" },
+                { id: 11, order: 13, toggleSection: true, name: "Porucha opozičního vzdoru - detail" },
+                { id: 12, order: 14, toggleSection: true, name: "ADHD Index - detail" },
+                { id: 13, order: 7, toggleSection: false, name: "Inkonzistence odpovědí" },
+                { id: 14, order: 8, toggleSection: true, name: "Inkonzistence odpovědí - detail" },
+                { id: 99, order: 99, toggleSection: false, name: "Ostatní" }
+            ];
+
+            // --- 2. LABELS s číslem tabulky jako první parametr ---
+            const LABELS = {
+                // Profil (T-skóry)
+                CAT_IN_T: { table: 1, label: "Nepozornost – T-skór", color: [60, 70] },
+                CAT_HY_T: { table: 1, label: "Hyperaktivita/impulzivita – T-skór", color: [60, 70] },
+                CAT_LP_T: { table: 1, label: "Problémy s učením – T-skór", color: [60, 70] },
+                CAT_EF_T: { table: 1, label: "Exekutivní funkce – T-skór", color: [60, 70] },
+                CAT_AG_T: { table: 1, label: "Vzdor/Agrese – T-skór", color: [60, 70] },
+                CAT_PR_T: { table: 1, label: "Vztahy s vrstevníky – T-skór", color: [60, 70] },
+                CAT_GI_T: { table: 1, label: "Globální index Conners3 – T-skór", color: [60, 70] },
+                CAT_AN_T: { table: 1, label: "DSM-5 ADHD s převahou nepozornosti – T-skór", color: [60, 70] },
+                CAT_AH_T: { table: 1, label: "DSM-5 ADHD s převahou hyperaktivity/impulzivity – T-skór", color: [60, 70] },
+                CAT_CD_T: { table: 1, label: "DSM-5 Porucha chování – T-skór", color: [60, 70] },
+                CAT_OD_T: { table: 1, label: "DSM-5 Porucha opozičního vzdoru – T-skór", color: [60, 70] },
+                // Výsledky kategorií
+                CAT_IN: { table: 2, label: "Nepozornost" },
+                CAT_HY: { table: 2, label: "Hyperaktivita/impulsivita" },
+                CAT_LP: { table: 2, label: "Problémy s učením" },
+                CAT_EF: { table: 2, label: "Exekutivní funkce" },
+                CAT_AG: { table: 2, label: "Vzdor/Agrese" },
+                CAT_PR: { table: 2, label: "Vztahy s vrstevníky" },
+                CAT_GI: { table: 2, label: "Globální index Conners3" },
+                CAT_AN: { table: 2, label: "DSM-5 ADHD s převahou nepozornosti" },
+                CAT_AH: { table: 2, label: "DSM-5 ADHD s převahou hyperaktivity/impulzivity" },
+                CAT_CD: { table: 2, label: "DSM-5 Porucha chování" },
+                CAT_OD: { table: 2, label: "DSM-5 Porucha opozičního vzdoru" },
+                // Screening skóre – Úzkost
+                Screening_1: { table: 3, label: "Obavy", color: [0, 1] },
+                Screening_2: { table: 3, label: "Problémy s kontrolou obav", color: [0, 1] },
+                Screening_3: { table: 3, label: "Nervozita nebo vyplašenost", color: [0, 1] },
+                Screening_4: { table: 3, label: "Podrážděnost", color: [0, 1] },
+                // Screening skóre – Deprese
+                Screening_5: { table: 4, label: "Pocit bezcennosti", color: [0, 1] },
+                Screening_6: { table: 4, label: "Únava, ztráta energie", color: [0, 1] },
+                Screening_7: { table: 4, label: "Ztráta zájmu", color: [0, 1] },
+                Screening_8: { table: 4, label: "Smutek, sklíčenost nebo podrážděnost", color: [0, 1] },
+                // Screening skóre – Kritické položky závažného chování
+                Screening_9: { table: 5, label: "Nucená sexuální aktivita", color: [0, 1] },
+                Screening_10: { table: 5, label: "Používání zbraní", color: [0, 1] },
+                Screening_11: { table: 5, label: "Krutost ke zvířatům", color: [0, 1] },
+                Screening_12: { table: 5, label: "Zakládání ohňů", color: [0, 1] },
+                Screening_13: { table: 5, label: "Vloupání", color: [0, 1] },
+                Screening_14: { table: 5, label: "Krádeže v přímé konfrontaci", color: [0, 1] },
+                // Kritéria DSM-5
+                DSM5_A1: { table: 6, label: "ADHD s převahou nepozornosti"},
+                DSM5_A2: { table: 6, label: "ADHD s převahou hyperaktivity a impulzivity" },
+                ADHD_combi: { table: 6, label: "ADHD kombinovaná porucha" },
+                Porucha_chovani: { table: 6, label: "Porucha chování" },
+                Porucha_opozicniho_vzdoru: { table: 6, label: "Porucha opozičního vzdoru" },
+                // ADHD Index
+                Index_sum: { table: 7, label: "Součet ADHD Indexů" },
+                ADHD_prob: { table: 7, label: "Pravděpodobnost ADHD", color: [70, 80] },
+                // Kritéria DSM-5 - ADHD s převahou nepozornosti - detail
+                CRIT_A1a: { table: 8, label: "A1a" },
+                CRIT_A1b: { table: 8, label: "A1b" },
+                CRIT_A1c: { table: 8, label: "A1c" },
+                CRIT_A1d: { table: 8, label: "A1d" },
+                CRIT_A1e: { table: 8, label: "A1e" },
+                CRIT_A1f: { table: 8, label: "A1f" },
+                CRIT_A1g: { table: 8, label: "A1g" },
+                CRIT_A1h: { table: 8, label: "A1h" },
+                CRIT_A1i: { table: 8, label: "A1i" },
+                // Kritéria DSM-5 - ADHD s převahou hyperaktivity/impulzivity - detail
+                CRIT_A2a: { table: 9, label: "A2a" },
+                CRIT_A2b: { table: 9, label: "A2b" },
+                CRIT_A2c: { table: 9, label: "A2c" },
+                CRIT_A2d: { table: 9, label: "A2d" },
+                CRIT_A2e: { table: 9, label: "A2e" },
+                CRIT_A2f: { table: 9, label: "A2f" },
+                CRIT_A2g: { table: 9, label: "A2g" },
+                CRIT_A2h: { table: 9, label: "A2h" },
+                CRIT_A2i: { table: 9, label: "A2i" },
+                // Kritéria DSM-5 - Porucha chování - detail
+                CRIT_A3a: { table: 10, label: "A1" },
+                CRIT_A3b: { table: 10, label: "A2" },
+                CRIT_A3c: { table: 10, label: "A3" },
+                CRIT_A3d: { table: 10, label: "A4" },
+                CRIT_A3e: { table: 10, label: "A5" },
+                CRIT_A3f: { table: 10, label: "A6" },
+                CRIT_A3g: { table: 10, label: "A7" },
+                CRIT_A3h: { table: 10, label: "A8" },
+                CRIT_A3i: { table: 10, label: "A9" },
+                CRIT_A3j: { table: 10, label: "A10" },
+                CRIT_A3k: { table: 10, label: "A11" },
+                CRIT_A3l: { table: 10, label: "A12" },
+                CRIT_A3m: { table: 10, label: "A13" },
+                CRIT_A3n: { table: 10, label: "A14" },
+                CRIT_A3o: { table: 10, label: "A15" },
+                // Kritéria DSM-5 - Porucha opozičního vzdoru - detail
+                CRIT_A4a: { table: 11, label: "A1" },
+                CRIT_A4b: { table: 11, label: "A2" },
+                CRIT_A4c: { table: 11, label: "A3" },
+                CRIT_A4d: { table: 11, label: "A4" },
+                CRIT_A4e: { table: 11, label: "A5" },
+                CRIT_A4f: { table: 11, label: "A6" },
+                CRIT_A4g: { table: 11, label: "A7" },
+                CRIT_A4h: { table: 11, label: "A8" },
+                // ADHD Index - detail
+                IndexQ19: { table: 12, label: "Položka 19" },
+                IndexQ35: { table: 12, label: "Položka 35" },
+                IndexQ47: { table: 12, label: "Položka 47" },
+                IndexQ67: { table: 12, label: "Položka 67" },
+                IndexQ84: { table: 12, label: "Položka 84" },
+                IndexQ88: { table: 12, label: "Položka 88" },
+                IndexQ98: { table: 12, label: "Položka 98" },
+                IndexQ99: { table: 12, label: "Položka 99" },
+                IndexQ101: { table: 12, label: "Položka 101" },
+                IndexQ104: { table: 12, label: "Položka 104" },
+                // Inkonzistence odpovědí
+                Inconsistency_A: { table: 13, label: "Celkový Index inkonzistence (A)", color: [0, 7] },
+                Inconsistency_B: { table: 13, label: "Počet absolutních rozdílů = 2 nebo 3 (B)", color: [0, 2] },
+                Inconsistency: { table: 13, label: "Možný inkonzistentní styl odpovědí" },
+                // Inkonzistence odpovědí - detail
+                KONZ_A: { table: 14, label: "Položky 44 a 67" },
+                KONZ_B: { table: 14, label: "Položky 12 a 23" },
+                KONZ_C: { table: 14, label: "Položky 36 a 60" },
+                KONZ_D: { table: 14, label: "Položky 14 a 81" },
+                KONZ_E: { table: 14, label: "Položky 19 a 98" },
+                KONZ_F: { table: 14, label: "Položky 45 a 99" },
+                KONZ_G: { table: 14, label: "Položky 94 a 102" },
+                KONZ_H: { table: 14, label: "Položky 75 a 79" },
+                KONZ_I: { table: 14, label: "Položky 13 a 92" },
+                KONZ_J: { table: 14, label: "Položky 39 a 83" }
+            };
+
+            // --- Sjednocené vykreslení sekcí ---
+            function renderSections(row, header, labelMap, tables) {
+                if (!row || !header) return "";
+                const sections = {};
+                for (let i = 0; i < header.length; i++) {
+                    const key = header[i];
+                    const labelObj = labelMap[key];
+                    if (!labelObj) continue;
+                    const tbl = labelObj.table || 99;
+                    if (!sections[tbl]) sections[tbl] = [];
+                    sections[tbl].push(
+                        `<tr>
+                            <td>${labelObj.label}</td>
+                            <td>${getColoredValue(row[i], labelObj)}</td>
+                        </tr>`
+                    );
+                }
+                let html = "";
+                tables.sort((a, b) => a.order - b.order).forEach(table => {
+                    if (!sections[table.id]) return;
+                    // Ikona pro kopírování obsahu tabulky
+                    const copyIcon = `<span class="material-symbols-outlined copy-table-btn"
+                        title="Kopírovat tabulku"
+                        style="font-size:1.1em;vertical-align:middle;cursor:pointer;float:right;margin-left:0.5em;"
+                        onclick="event.stopPropagation(); copyTable('table-content-${table.id}')"
+                    >content_copy</span>`;
+
+                    if (table.toggleSection) {
+                        const tableId = `toggle-table-${table.id}`;
+                        html += `<div class="results-table-wrapper toggle-section fade-in" tabindex="0" onclick="
+                            var tbl = document.getElementById('${tableId}');
+                            var expanded = tbl.style.display !== 'none';
+                            tbl.style.display = expanded ? 'none' : '';
+                            this.classList.toggle('expanded', !expanded);
+                        ">
+                            <h3>${table.name}${copyIcon}</h3>
+                            <div id="${tableId}" style="display:none;">
+                                <table id="table-content-${table.id}" class="respondent-table results-table"><tbody>${sections[table.id].join("")}</tbody></table>
+                            </div>
+                        </div>`;
+                    } else {
+                        html += `<div class="results-table-wrapper fade-in">
+                            <h3>${table.name}${copyIcon}</h3>
+                            <table id="table-content-${table.id}" class="respondent-table results-table"><tbody>${sections[table.id].join("")}</tbody></table>
+                        </div>`;
+                    }
+                });
+                return html;
+            }
+
+            // --- VYKRESLENÍ ---
+            let html = "";
+
+            // PROFIL
+            html += (profileData && profileData.row && profileData.header)
+                ? renderSections(profileData.row, profileData.header, LABELS, TABLES, true)
+                : `<div class="results-table-wrapper"><p style="color:#d32f2f;">Profil nenalezen.</p></div>`;
+
+            // VÝSLEDKY
+            html += (resultsData && resultsData.row && resultsData.header)
+                ? renderSections(resultsData.row, resultsData.header, LABELS, TABLES, false)
+                : `<div class="results-table-wrapper"><p style="color:#d32f2f;">Výsledky nenalezeny.</p></div>`;
+
+            document.getElementById('results-profile-loading').outerHTML = html;
+
+            if (!document.getElementById('export-all-csv-btn')) {
+                const btn = document.createElement('button');
+                btn.id = 'export-all-csv-btn';
+                btn.className = 'export-all-csv-btn';
+                btn.title = 'Exportovat všechna data do CSV';
+                btn.setAttribute('aria-label', 'Exportovat všechna data do CSV');
+                btn.onmouseover = () => btn.style.background = "#bbdefb";
+                btn.onmouseout = () => btn.style.background = "#e3f0fc";
+                btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.3em;">csv</span>`;
+                btn.onclick = function () {
+                    exportAllRespondentDataToCSV(profileData, resultsData);
+                };
+                const header = document.querySelector('.header');
+                if (header) header.appendChild(btn);
+            }
+        });
+    }
+</script>

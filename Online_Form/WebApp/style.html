@@ -1,0 +1,199 @@
+<style>
+  body {
+    font-family: 'Noto Serif', 'Roboto', Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    color: #222;
+  }
+
+  .header {
+    padding: 1.5em 2em 1em 2em;
+    background: #fff;
+    box-shadow: 0 2px 8px #0001;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header h1 {
+    text-align: center;
+    flex: 1;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .card-list {
+    display: flex;
+    gap: 2em;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 2em 0;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px #0002;
+    padding: 2em 2.5em;
+    min-width: 220px;
+    text-align: center;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 16px #1976d2aa;
+  }
+
+  .back-btn {
+    position: absolute;
+    background: none;
+    border: none;
+    color: #1976d2;
+    font-size: 2.5em;
+    cursor: pointer;
+  }
+
+  .back-btn:hover {
+    color: #0d47a1;
+    font-size: 2.8em;
+    transition: color 0.2s, font-size 0.3s;
+  }
+
+  .material-icons.spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .copy-table-btn {
+    color: #1976d2;
+    transition: color 0.2s;
+  }
+
+  .copy-table-btn:hover {
+    color: #0d47a1;
+  }
+
+  .export-all-csv-btn {
+    margin-left: 1em;
+    background: #e3f0fc;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7em;
+    color: #1976d2;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #1976d222;
+    transition: background 0.2s, box-shadow 0.2s;
+    float: right;
+  }
+
+  /* Questionair - Table of respondents */
+
+  .respondent-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 2em 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px #1976d222;
+    overflow: hidden;
+    font-size: 1.08em;
+    transition: box-shadow 0.2s;
+  }
+
+  .respondent-table th,
+  .respondent-table td {
+    padding: 1.1em 1.3em;
+    border-bottom: 1px solid #e3e8ee;
+    text-align: left;
+  }
+
+  .respondent-table th {
+    background: #e3f0fc;
+    color: #1976d2;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid #1976d2;
+  }
+
+  .respondent-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .respondent-table tr {
+    transition: background 0.15s;
+  }
+
+  .respondent-table tr:hover {
+    background: #e3f0fc;
+    cursor: pointer;
+  }
+
+  .respondent-table td {
+    vertical-align: middle;
+  }
+
+  /* Respondent - Results detail */
+
+  .results-table-wrapper {
+    max-width: 680px;
+    margin: 2em auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px #1976d222;
+    padding: 1.5em 1.5em 1em 1.5em;
+  }
+
+  .results-table-wrapper h3 {
+    margin-top: 0.5em;
+    margin-bottom: 0.7em;
+    text-align: center;
+    color: #1976d2;
+    font-size: 1.2em;
+    font-weight: 600;
+  }
+
+  .respondent-table.results-table {
+    margin: 0;
+    font-size: 1em;
+    box-shadow: none;
+    border-radius: 10px;
+  }
+
+  .respondent-table.results-table td {
+    padding: 0.7em 1em;
+  }
+
+  .toggle-section {
+    cursor: pointer;
+  }
+
+  .toggle-section>div {
+    transition: all 0.5s;
+  }
+</style>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Zobrazení dat z dotazníků">
+    <meta name="author" content="hanzliklukas2@gmail.com">
+    <meta property="og:site_name" content="Psychologické dotazníky">
+    <meta property="og:title" content="Dotazníky">
+    <title>Psychologické dotazníky</title>
+    <link rel="icon" type="image/x-icon" href="https://example.com/cesta/k/vasemu/favicon.ico">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=content_copy" />
+    
+    <?!= include('style'); ?>
+  </head>
+  <body>
+    <div id="app"></div>
+    <?!= include('utils'); ?>
+    <?!= include('main'); ?>
+    <?!= include('renderRespondents'); ?>
+    <?!= include('renderRespondentDetail'); ?>
+    <?!= include('detailsConners3'); ?>
+  </body>
+</html>
+

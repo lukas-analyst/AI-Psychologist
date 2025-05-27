@@ -1,0 +1,99 @@
+<script>
+console.log("main.js loaded");
+let state = {
+  questionnaires: [],
+  questionnaire: null,
+  respondents: [],
+  respondent: null
+};
+
+function showError(msg) {
+  alert("Chyba: " + msg);
+}
+
+// ROUTING
+function handleRouting() {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash) {
+    renderHome();
+    return;
+  }
+  const parts = hash.split("/");
+  const questionnaireId = parts[0];
+  const respondentId = parts[2];
+
+  // Pokud ještě nemáme načtené dotazníky, načti je a pak pokračuj
+  if (!state.questionnaires.length) {
+    google.script.run.withSuccessHandler(qs => {
+      state.questionnaires = qs;
+      routeAfterQuestionnairesLoaded(parts, questionnaireId, respondentId);
+    }).getQuestionnaires();
+    return;
+  }
+  routeAfterQuestionnairesLoaded(parts, questionnaireId, respondentId);
+}
+
+function routeAfterQuestionnairesLoaded(parts, questionnaireId, respondentId) {
+  const questionnaire = state.questionnaires.find(q => q.id === questionnaireId);
+  if (!questionnaire) {
+    renderHome();
+    return;
+  }
+  state.questionnaire = questionnaire;
+
+  if (parts.length === 1) {
+    renderRespondents();
+  } else if (parts[1] === "respondent" && respondentId) {
+    // Pokud už máme respondenty, najdi respondenta
+    if (state.respondents && state.respondents.length) {
+      state.respondent = state.respondents.find(r => String(r.ID) === respondentId);
+      renderRespondentDetail();
+    } else {
+      // Jinak načti respondenty a pak detail
+      google.script.run.withSuccessHandler(rows => {
+        state.respondents = rows;
+        state.respondent = state.respondents.find(r => String(r.ID) === respondentId);
+        renderRespondentDetail();
+      }).withFailureHandler(e => {
+        showError(e && e.message ? e.message : e);
+      }).getRespondents(state.questionnaire.sheetId);
+    }
+  } else {
+    renderHome();
+  }
+}
+
+function renderHome() {
+  google.script.run
+    .withSuccessHandler(qs => {
+      state.questionnaires = qs;
+      document.getElementById('app').innerHTML = `
+      <div class="header fade-in">
+          <h1><span class="material-icons" style="vertical-align:-5px;color:#1976d2;font-size:1.2em">psychology</span> Výběr dotazníku</h1>
+      </div>
+      <div class="card-list fade-in">
+          ${qs.map(q => `
+          <div class="card" data-id="${q.id}">
+              <span class="material-icons" style="font-size:2.5em;color:#1976d2;">assignment</span>
+              <h2>${q.name}</h2>
+          </div>
+          `).join('')}
+      </div>
+      `;
+      document.querySelectorAll('.card').forEach(card => {
+        card.onclick = () => {
+          state.questionnaire = qs.find(q => q.id === card.dataset.id);
+          window.location.hash = "#" + state.questionnaire.id;
+        };
+      });
+    })
+    .withFailureHandler(e => {
+      showError(e && e.message ? e.message : e);
+    })
+    .getQuestionnaires();
+}
+
+// ROUTER INIT
+window.addEventListener('DOMContentLoaded', handleRouting);
+window.addEventListener('hashchange', handleRouting);
+</script>

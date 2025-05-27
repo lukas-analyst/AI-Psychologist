@@ -1,0 +1,169 @@
+<script>
+    /**
+     * Vrátí HTML <span> s hodnotou obarvenou podle hranic.
+     * @param {number|string} value - Hodnota k vyhodnocení a zobrazení.
+     * @param {number} greenLimit - Hodnota od které je zelená.
+     * @param {number} redLimit - Hodnota od které je červená.
+     * @param {boolean} [reverse=false] - Pokud true, barvy jsou obráceně (např. nižší je horší).
+     * @returns {string} - HTML <span> s obarvenou hodnotou.
+     */
+    function colorizeValue(value, greenLimit, redLimit, reverse = false) {
+    let num = Number(value);
+    let color = "black";
+    if (isNaN(num)) return `<span>${value}</span>`;
+    if (!reverse) {
+        if (num >= redLimit) color = "red";
+        else if (num >= greenLimit) color = "green";
+    } else {
+        if (num <= redLimit) color = "red";
+        else if (num <= greenLimit) color = "green";
+    }
+    return `<span style="color:${color}">${value}</span>`;
+    }
+
+    /**
+     * Exportuje data aktuálního respondenta do CSV a stáhne je jako soubor.
+     */
+    function exportAllRespondentDataToCSV(profileData, resultsData) {
+        // Získání hlaviček a hodnot
+        const sections = [];
+        if (profileData && profileData.header && profileData.row) {
+            sections.push({
+                name: "Profil",
+                header: profileData.header,
+                row: profileData.row
+            });
+        }
+        if (resultsData && resultsData.header && resultsData.row) {
+            sections.push({
+                name: "Výsledky",
+                header: resultsData.header,
+                row: resultsData.row
+            });
+        }
+        // Sestavení CSV
+        let csvRows = [];
+        sections.forEach(section => {
+            csvRows.push(`# ${section.name}`);
+            csvRows.push(section.header.join(";"));
+            csvRows.push(section.row.map(val => {
+                if (typeof val === "string" && (val.includes(";") || val.includes('"') || val.includes('\n'))) {
+                    return '"' + val.replace(/"/g, '""') + '"';
+                }
+                return val == null ? "" : val;
+            }).join(";"));
+            csvRows.push(""); // prázdný řádek mezi sekcemi
+        });
+        const csvContent = csvRows.join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `respondent_${state.respondent.ID || "data"}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
+    
+    // --- HELPERY ---
+    function infoIcon(text) {
+        if (!text) return "";
+        // Rich tooltip podle Material Design – https://m3.material.io/components/tooltips/guidelines
+        return `
+        <span class="info-icon material-icons"
+                tabindex="0"
+                aria-label="Info"
+                aria-describedby="rich-tooltip"
+                style="position:relative;cursor:pointer;vertical-align:middle;"
+                onmouseenter="this.querySelector('.mdc-rich-tooltip').style.display='block';"
+                onmouseleave="this.querySelector('.mdc-rich-tooltip').style.display='none';"
+                onfocus="this.querySelector('.mdc-rich-tooltip').style.display='block';"
+                onblur="this.querySelector('.mdc-rich-tooltip').style.display='none';"
+        >info
+            <span class="mdc-rich-tooltip"
+                style="
+                    display:none;
+                    position:absolute;
+                    left:100%; top:50%; transform:translateY(-50%);
+                    background:#323232; color:#fff; padding:16px 18px; border-radius:12px; white-space:pre-line;
+                    z-index:9999; min-width:220px; max-width:340px; margin-left:12px; box-shadow:0 4px 24px rgba(0,0,0,0.22);
+                    font-size:1em; font-family:Roboto,Arial,sans-serif; line-height:1.5;
+                "
+            >${text}</span>
+        </span>
+        `;
+    }
+    function getColoredValue(value, labelObj) {
+        if (typeof value === "string" && (value.trim().toUpperCase() === "ANO" || value.trim().toUpperCase() === "NE")) {
+            const v = value.trim().toUpperCase();
+            const color = v === "ANO" ? "#d32f2f" : "#388e3c";
+            return `<span style="color:${color};font-weight:bold">${v}</span>`;
+        }
+        if (labelObj && Array.isArray(labelObj.color) && !isNaN(Number(value))) {
+            return colorizeValue(Number(value), labelObj.color[0], labelObj.color[1]);
+        }
+        if (typeof value === "object" && value !== null) {
+            if (Array.isArray(value) && value.length === 1) return String(value[0]);
+            return JSON.stringify(value);
+        }
+        return value != null ? String(value) : "";
+    }
+
+        function copyTable(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            // Vytvoření dočasného textarea pro čistý text tabulky
+            let text = "";
+            for (const row of table.rows) {
+                let rowText = [];
+                for (const cell of row.cells) {
+                    rowText.push(cell.innerText.trim());
+                }
+                text += rowText.join('\t') + '\n';
+            }
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        
+            // Zobraz krátkou informaci o zkopírování
+            showCopyNotification();
+        }
+        
+        /**
+         * Zobrazí krátkou notifikaci o zkopírování dat do schránky.
+         */
+        function showCopyNotification() {
+            // Pokud už notifikace existuje, neukazuj znovu
+            if (document.getElementById('copy-table-toast')) return;
+            const toast = document.createElement('div');
+            toast.id = 'copy-table-toast';
+            toast.textContent = 'Data byla zkopírována do schránky';
+            toast.style.position = 'fixed';
+            toast.style.bottom = '32px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.background = '#1976d2';
+            toast.style.color = '#fff';
+            toast.style.padding = '0.7em 1.7em';
+            toast.style.borderRadius = '24px';
+            toast.style.boxShadow = '0 2px 12px #1976d288';
+            toast.style.fontSize = '1.08em';
+            toast.style.zIndex = 9999;
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.2s';
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '1'; }, 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 300);
+            }, 1400);
+        }
+</script>

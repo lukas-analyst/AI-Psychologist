@@ -1,0 +1,73 @@
+const QUESTIONNAIRES = [
+  {
+    id: "conners3",
+    name: "Conners 3",
+    sheetId: "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus"
+  },
+  {
+    id: "dotaznik2",
+    name: "Dotazník 2",
+    sheetId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+];
+
+function doGet() {
+  var user_email = Session.getActiveUser().getEmail();
+
+  var template = HtmlService.createTemplateFromFile('index')
+      template.user_email = user_email;
+  return template.evaluate();
+}
+
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+function getQuestionnaires() {
+  return QUESTIONNAIRES;
+}
+
+function getRespondents(sheetId) {
+  var ss = SpreadsheetApp.openById(sheetId);
+  var sheet = ss.getSheetByName('Respondents');
+  if (!sheet) {
+    Logger.log("Respondents sheet not found for sheetId: " + sheetId);
+    return [];
+  }
+  var data = sheet.getDataRange().getValues();
+  Logger.log("Respondents data for sheetId " + sheetId + ": " + JSON.stringify(data));
+  if (!data || data.length < 2) {
+    Logger.log("Respondents sheet is empty or only header for sheetId: " + sheetId);
+    return [];
+  }
+  var header = data[0];
+  var rows = data.slice(1).map(row => {
+    var obj = {};
+    for (var i = 0; i < header.length; i++) obj[header[i]] = row[i];
+    return obj;
+  });
+  Logger.log("Parsed respondents: " + JSON.stringify(rows));
+  return rows;
+}
+
+function getResultsData(sheetId, respondentId) {
+  var ss = SpreadsheetApp.openById(sheetId || "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var sheet = ss.getSheetByName('Results');
+  if (!sheet) return {};
+  var data = sheet.getDataRange().getValues();
+  if (!respondentId) return data;
+  var header = data[0];
+  var row = data.find((r, i) => i > 0 && String(r[0]) === String(respondentId));
+  return row ? {header: header, row: row} : {};
+}
+
+function getProfileData(sheetId, respondentId) {
+  var ss = SpreadsheetApp.openById(sheetId || "1WWhXEHRJtcRkOb-PJcOFudCWeGwfzBOJCroZAFAoaus");
+  var sheet = ss.getSheetByName('Profile');
+  if (!sheet) return {};
+  var data = sheet.getDataRange().getValues();
+  if (!respondentId) return data;
+  var header = data[0];
+  var row = data.find((r, i) => i > 0 && String(r[0]) === String(respondentId));
+  return row ? {header: header, row: row} : {};
+}

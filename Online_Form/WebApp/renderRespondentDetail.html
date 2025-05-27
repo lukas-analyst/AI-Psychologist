@@ -1,0 +1,25 @@
+<script>
+function renderRespondentDetail() {
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <button class="back-btn material-icons" onclick="window.location.hash='#${state.questionnaire.id}'">arrow_circle_left</button>
+      <h1>${state.questionnaire.name} – ${state.respondent.name || ""}</h1>
+    </div>
+    <div id="respondent-detail-content" style="padding:2em;">
+      <h2>${state.respondent.name || ""}</h2>
+      <p><strong>ID:</strong> ${state.respondent.ID || ""}</p>
+      <p><strong>Věk:</strong> ${state.respondent.age_today || state.respondent.age || ""}</p>
+      <p><strong>Datum odeslání:</strong> ${state.respondent.datetime || ""}</p>
+      <p><strong>Pohlaví:</strong> ${state.respondent.gender || ""}</p>
+      <div id="results-profile-loading" style="margin:2em 0;color:#888;">
+        <span class="material-icons spin" style="font-size:2em;vertical-align:middle;color:#1976d2;">autorenew</span>
+        <span style="margin-left:0.5em;">Načítám výsledky…</span>
+      </div>
+    </div>
+  `;
+  // Spusť správný detailový skript podle dotazníku
+  const fnName = "details" + state.questionnaire.id.toLowerCase();
+  if (typeof window[fnName] === "function") window[fnName]();
+  else console.warn("Detailová funkce nenalezena:", fnName);
+}
+</script>
