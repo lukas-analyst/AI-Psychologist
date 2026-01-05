@@ -9,7 +9,13 @@ const QUESTIONNAIRES = [
     id: "cdi",
     name: "CDI",
     sheetId: "13zRZNQuQhYkpgorL05scqi8ovuO_OzF9YSqfrc63FwI",
-    ormUrl: "https://docs.google.com/forms/d/1Rv0Giu5eJcC3R-pM_zW6iwpwjK58dFxD_-OLoZFIhGw"
+    formUrl: "https://docs.google.com/forms/d/1Rv0Giu5eJcC3R-pM_zW6iwpwjK58dFxD_-OLoZFIhGw"
+  },
+  {
+    id: "scl90",
+    name: "SCL 90",
+    sheetId: "1O69GNJdZoyMAHLFsJyceNxZYFJaAt-XpwW0L5F_vcAA",
+    formUrl: "https://docs.google.com/forms/d/15CpHRvWWDMFMdasKNzYoiYN7Q0VL2yEDK5ycrhUmsgE"
   }
 ];
 

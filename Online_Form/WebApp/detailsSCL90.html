@@ -1,0 +1,157 @@
+<script>
+    window.detailsscl90 = function () {
+        const respondentId = state.respondent.ID;
+        console.log("detailsscl90: respondentId =", respondentId);
+        Promise.all([
+            new Promise(resolve => {
+                google.script.run
+                    .withSuccessHandler(data => resolve(data))
+                    .withFailureHandler(e => resolve({ error: e && e.message ? e.message : e }))
+                    .getResultsData(state.questionnaire.sheetId, respondentId);
+            }),
+            new Promise(resolve => {
+                google.script.run
+                    .withSuccessHandler(data => resolve(data))
+                    .withFailureHandler(e => resolve({ error: e && e.message ? e.message : e }))
+                    .getProfileData(state.questionnaire.sheetId, respondentId);
+            })
+        ]).then(([resultsData, profileData]) => {
+            // --- 1. Definice TABLES (číslované, s atributy) ---
+            const TABLES = [
+                { id: 1, order: 1, toggleSection: false, name: "Profil (T-skóry)" },
+                { id: 2, order: 2, toggleSection: true, name: "Výsledky kategorií" }
+            ];
+
+            // --- 2. LABELS s číslem tabulky jako první parametr ---
+            const LABELS = {
+                // --- T-skóry (zatím nejsou počítány, připraveno zakomentované) ---
+                // SCL90_T_SOM: { table: 1, label: "Somatizace (T-skór)", color: [60, 70] },
+                // SCL90_T_OBC: { table: 1, label: "Obsedantně-kompulzivní (T-skór)", color: [60, 70] },
+                // SCL90_T_CIT: { table: 1, label: "Citová labilita (T-skór)", color: [60, 70] },
+                // SCL90_T_DEP: { table: 1, label: "Deprese (T-skór)", color: [60, 70] },
+                // SCL90_T_ANX: { table: 1, label: "Úzkost (T-skór)", color: [60, 70] },
+                // SCL90_T_HOS: { table: 1, label: "Hostilita (T-skór)", color: [60, 70] },
+                // SCL90_T_FOB: { table: 1, label: "Fobie (T-skór)", color: [60, 70] },
+                // SCL90_T_PAR: { table: 1, label: "Paranoidita (T-skór)", color: [60, 70] },
+                // SCL90_T_PSY: { table: 1, label: "Psychoticismus (T-skór)", color: [60, 70] },
+                // SCL90_T_DOPLNEK: { table: 1, label: "Doplňkové položky (T-skór)", color: [60, 70] },
+
+                // --- Výsledky kategorií a globální indexy ---
+                S_SOM: { table: 2, label: "Somatizace (SOM) - součet" },
+                S_OBC: { table: 2, label: "Obsedantně-kompulzivní (OBC) - součet" },
+                S_CIT: { table: 2, label: "Citová labilita (CIT) - součet" },
+                S_DEP: { table: 2, label: "Deprese (DEP) - součet" },
+                S_ANX: { table: 2, label: "Úzkost (ANX) - součet" },
+                S_HOS: { table: 2, label: "Hostilita (HOS) - součet" },
+                S_FOB: { table: 2, label: "Fobie (FOB) - součet" },
+                S_PAR: { table: 2, label: "Paranoidita (PAR) - součet" },
+                S_PSY: { table: 2, label: "Psychoticismus (PSY) - součet" },
+                G_SOM: { table: 2, label: "Somatizace (SOM) - průměr" },
+                G_OBC: { table: 2, label: "Obsedantně-kompulzivní (OBC) - průměr" },
+                G_CIT: { table: 2, label: "Citová labilita (CIT) - průměr" },
+                G_DEP: { table: 2, label: "Deprese (DEP) - průměr" },
+                G_ANX: { table: 2, label: "Úzkost (ANX) - průměr" },
+                G_HOS: { table: 2, label: "Hostilita (HOS) - průměr" },
+                G_FOB: { table: 2, label: "Fobie (FOB) - průměr" },
+                G_PAR: { table: 2, label: "Paranoidita (PAR) - průměr" },
+                G_PSY: { table: 2, label: "Psychoticismus (PSY) - průměr" },
+                P_SOM: { table: 2, label: "Somatizace (SOM) - počet > 0" },
+                P_OBC: { table: 2, label: "Obsedantně-kompulzivní (OBC) - počet > 0" },
+                P_CIT: { table: 2, label: "Citová labilita (CIT) - počet > 0" },
+                P_DEP: { table: 2, label: "Deprese (DEP) - počet > 0" },
+                P_ANX: { table: 2, label: "Úzkost (ANX) - počet > 0" },
+                P_HOS: { table: 2, label: "Hostilita (HOS) - počet > 0" },
+                P_FOB: { table: 2, label: "Fobie (FOB) - počet > 0" },
+                P_PAR: { table: 2, label: "Paranoidita (PAR) - počet > 0" },
+                P_PSY: { table: 2, label: "Psychoticismus (PSY) - počet > 0" },
+                DOPLNEK: { table: 2, label: "Doplňkové položky - součet" },
+                P_DOPLNEK: { table: 2, label: "Doplňkové položky - počet > 0" },
+                GS: { table: 2, label: "Globální skóre (GS) - součet všech S_ a DOPLNEK" },
+                GSI: { table: 2, label: "Globální index (GSI = GS / 90)" },
+                PST: { table: 2, label: "Globální počet > 0 (PST) - součet všech P_ a P_DOPLNEK" },
+                PSDI: { table: 2, label: "Globální index PSDI (GS / PST)" }
+            };
+
+            // --- Převod výsledků SCL-90 na tabulku škál a globálních indexů ---
+            function renderSCL90Sections(row, header) {
+                if (!row || !header) return "";
+                // Sekce 1: tabulka škál
+                const scales = [
+                    { code: 'S_SOM', name: 'Somatizace' },
+                    { code: 'S_OBC', name: 'Obsedantně-kompulzivní' },
+                    { code: 'S_CIT', name: 'Citová labilita' },
+                    { code: 'S_DEP', name: 'Deprese' },
+                    { code: 'S_ANX', name: 'Úzkost' },
+                    { code: 'S_HOS', name: 'Hostilita' },
+                    { code: 'S_FOB', name: 'Fobie' },
+                    { code: 'S_PAR', name: 'Paranoidita' },
+                    { code: 'S_PSY', name: 'Psychoticismus' }
+                ];
+                let html = `<div class="results-table-wrapper fade-in"><h3>Škály</h3><table class="respondent-table results-table"><thead><tr>
+                    <th>Škála</th><th>Součet (S_)</th><th>Hodnota škály (G_)</th><th>Počet > 0 (P_)</th>
+                </tr></thead><tbody>`;
+                for (const scale of scales) {
+                    const sIdx = header.indexOf(scale.code);
+                    const gIdx = header.indexOf('G_' + scale.code.substring(2));
+                    const pIdx = header.indexOf('P_' + scale.code.substring(2));
+                    html += `<tr>
+                        <td>${scale.code} - ${scale.name}</td>
+                        <td>${sIdx >= 0 ? row[sIdx] : ''}</td>
+                        <td>${gIdx >= 0 ? row[gIdx] : ''}</td>
+                        <td>${pIdx >= 0 ? row[pIdx] : ''}</td>
+                    </tr>`;
+                }
+                // Doplňkové položky
+                const doplnekIdx = header.indexOf('DOPLNEK');
+                const pDoplnekIdx = header.indexOf('P_DOPLNEK');
+                html += `<tr>
+                    <td>DOPLNEK - Doplňkové položky</td>
+                    <td>${doplnekIdx >= 0 ? row[doplnekIdx] : ''}</td>
+                    <td></td>
+                    <td>${pDoplnekIdx >= 0 ? row[pDoplnekIdx] : ''}</td>
+                </tr>`;
+                html += `</tbody></table></div>`;
+
+                // Sekce 2: tabulka globálních indexů
+                const gsIdx = header.indexOf('GS');
+                const gsiIdx = header.indexOf('GSI');
+                const pstIdx = header.indexOf('PST');
+                const psdiIdx = header.indexOf('PSDI');
+                html += `<div class="results-table-wrapper fade-in"><h3>Globální indexy</h3><table class="respondent-table results-table"><tbody>
+                        <tr><td><b>GS</b> (Globální skóre - součet všech S_ a DOPLNEK)</td><td>${gsIdx >= 0 ? row[gsIdx] : ''}</td></tr>
+                        <tr><td><b>GSI</b> (Globální index = GS / 90)</td><td>${gsiIdx >= 0 ? row[gsiIdx] : ''}</td></tr>
+                        <tr><td><b>PST</b> (Globální počet > 0 - součet všech P_ a P_DOPLNEK)</td><td>${pstIdx >= 0 ? row[pstIdx] : ''}</td></tr>
+                        <tr><td><b>PSDI</b> (Globální index PSDI = GS / PST)</td><td>${psdiIdx >= 0 ? row[psdiIdx] : ''}</td></tr>
+                    </tbody></table></div>`;
+                return html;
+            }
+
+            // --- VYKRESLENÍ ---
+            let html = "";
+
+
+            // Výsledky SCL-90: dvě sekce (škály, globální indexy)
+            html += (resultsData && resultsData.row && resultsData.header)
+                ? renderSCL90Sections(resultsData.row, resultsData.header)
+                : `<div class="results-table-wrapper"><p style="color:#d32f2f;">Výsledky nenalezeny.</p></div>`;
+
+            document.getElementById('results-profile-loading').outerHTML = html;
+
+            if (!document.getElementById('export-all-csv-btn')) {
+                const btn = document.createElement('button');
+                btn.id = 'export-all-csv-btn';
+                btn.className = 'export-all-csv-btn';
+                btn.title = 'Exportovat všechna data do CSV';
+                btn.setAttribute('aria-label', 'Exportovat všechna data do CSV');
+                btn.onmouseover = () => btn.style.background = "#bbdefb";
+                btn.onmouseout = () => btn.style.background = "#e3f0fc";
+                btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.3em;">csv</span>`;
+                btn.onclick = function () {
+                    exportAllRespondentDataToCSV(profileData, resultsData);
+                };
+                const header = document.querySelector('.header');
+                if (header) header.appendChild(btn);
+            }
+        });
+    }
+</script>
