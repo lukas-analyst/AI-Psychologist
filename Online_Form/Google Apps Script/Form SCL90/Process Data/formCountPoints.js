@@ -58,16 +58,19 @@ function countPoints() {
     var respondent = odpovediData[i][1];
     if (!id || processedMap[id]) continue; // přeskoč již zpracované
     var rowPoints = [id, respondent], total = 0;
+    var logOtazky = [];
     for (var j = firstQ; j < lastQ; j++) {
       var questionText = odpovediHeader[j];
       var answerText = odpovediData[i][j];
       var answerLetter = (typeof answerText === "string" && answerText.trim().charAt(0)) || "";
       var answerIdx = answerMap[answerLetter] !== undefined ? answerMap[answerLetter] : -1;
-      var qPoints = questionMap[questionText] || [0, 0, 0];
-      var pts = (answerIdx >= 0 && answerIdx <= 2) ? Number(qPoints[answerIdx]) : 0;
+      var qPoints = questionMap[questionText] || [0, 0, 0, 0, 0];
+      var pts = (answerIdx >= 0 && answerIdx <= 4) ? Number(qPoints[answerIdx]) : 0;
       rowPoints.push(pts);
       total += pts;
+      logOtazky.push({otazka: questionText, odpoved: answerText, bod: pts});
     }
+    Logger.log('Respondent: ' + respondent + ' (ID: ' + id + ') - otázky a body: ' + JSON.stringify(logOtazky) + ', total: ' + total);
     rowPoints.push(total);
     results.push(rowPoints);
   }

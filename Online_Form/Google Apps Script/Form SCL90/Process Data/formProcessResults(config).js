@@ -89,12 +89,22 @@ function processResults(config) {
       catKeys.forEach(function(cat) {
         var sum = 0;
         var aboveZero = 0;
+        var aboveZeroValues = [];
+        var allValues = [];
         config.categories[cat].forEach(function(qNum) {
           var idx = questionNumToCol[qNum];
           var val = (idx !== undefined) ? parseInt(row[idx], 10) : 0;
           sum += isNaN(val) ? 0 : val;
-          if (!isNaN(val) && val > 0) aboveZero++;
+          allValues.push({qNum: qNum, value: val});
+          if (!isNaN(val) && val > 0) {
+            aboveZero++;
+            aboveZeroValues.push({cat: cat, qNum: qNum, value: val});
+          }
         });
+        if (aboveZeroValues.length > 0) {
+          Logger.log('Respondent: ' + respondentName + ', kategorie ' + cat + ' - hodnoty > 0: ' + JSON.stringify(aboveZeroValues) + ', P: ' + aboveZero);
+        }
+        Logger.log('Respondent: ' + respondentName + ', kategorie ' + cat + ' - hodnoty pro G: ' + JSON.stringify(allValues) + ', G: ' + (allValues.length > 0 ? Number((sum / allValues.length).toFixed(2)) : 0));
         resultRow.push(sum);
         catSums.push({cat: cat, sum: sum, count: config.categories[cat].length});
         catAboveZero.push(aboveZero);
@@ -116,12 +126,22 @@ function processResults(config) {
     var doplnekOtazky = [19, 44, 59, 60, 64, 66, 89];
     var doplnekSum = 0;
     var doplnekAboveZero = 0;
+    var doplnekAboveZeroValues = [];
+    var doplnekAllValues = [];
     doplnekOtazky.forEach(function(qNum) {
       var idx = questionNumToCol[qNum];
       var val = (idx !== undefined) ? parseInt(row[idx], 10) : 0;
       doplnekSum += isNaN(val) ? 0 : val;
-      if (!isNaN(val) && val > 0) doplnekAboveZero++;
+      doplnekAllValues.push({qNum: qNum, value: val});
+      if (!isNaN(val) && val > 0) {
+        doplnekAboveZero++;
+        doplnekAboveZeroValues.push({qNum: qNum, value: val});
+      }
     });
+    if (doplnekAboveZeroValues.length > 0) {
+      Logger.log('Respondent: ' + respondentName + ', DOPLNEK - hodnoty > 0: ' + JSON.stringify(doplnekAboveZeroValues) + ', P_DOPLNEK: ' + doplnekAboveZero);
+    }
+    Logger.log('Respondent: ' + respondentName + ', DOPLNEK - hodnoty pro G: ' + JSON.stringify(doplnekAllValues) + ', G_DOPLNEK: ' + (doplnekAllValues.length > 0 ? Number((doplnekSum / doplnekAllValues.length).toFixed(2)) : 0));
     resultRow.push(doplnekSum);
     resultRow.push(doplnekAboveZero);
 
